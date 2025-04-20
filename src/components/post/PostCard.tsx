@@ -13,12 +13,11 @@ const PostCard = ({ post }: PostCardProps) => {
     }
 
     const formatDate = (date: Date) => {
-        // return date.toLocaleDateString('en-US', {
-        //     year: 'numeric',
-        //     month: 'long',
-        //     day: 'numeric',
-        // })
-        return date
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        })
     }
 
     return (
@@ -32,7 +31,7 @@ const PostCard = ({ post }: PostCardProps) => {
                 </p>
                 <div className="flex items-center justify-between text-sm text-gray-500">
                     <span>By {post.authorEmail}</span>
-                    {/* <span>{formatDate(post.createdAt)}</span> */}
+                    <span>{formatDate(post.createdAt)}</span>
                 </div>
             </div>
         </Link>

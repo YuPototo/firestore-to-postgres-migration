@@ -11,14 +11,18 @@ import {
     limit,
     startAfter,
     QueryDocumentSnapshot,
+    updateDoc,
 } from 'firebase/firestore'
-import { CreatePostPayload } from '@/types/post'
+import {
+    CreatePostPayload,
+    UpdatePostPayload,
+    Post,
+    PostSchema,
+} from '@/types/post'
 
 const postsCollection = collection(db, 'posts')
 
 const createPost = async (payload: CreatePostPayload) => {
-    // todo: add zod validation
-
     const postRef = await addDoc(postsCollection, {
         ...payload,
         createdAt: serverTimestamp(),
@@ -27,13 +31,22 @@ const createPost = async (payload: CreatePostPayload) => {
     return postRef.id
 }
 
-const getPost = async (id: string) => {
+const getPost = async (id: string): Promise<Post | null> => {
     const postRef = doc(postsCollection, id)
     const postDoc = await getDoc(postRef)
 
     if (postDoc.exists()) {
-        // todo: add zod validation
-        return postDoc.data()
+        const post = PostSchema.safeParse({
+            id: postDoc.id,
+            ...postDoc.data(),
+        })
+
+        if (post.success) {
+            return post.data
+        } else {
+            console.error(post.error)
+            return null
+        }
     }
 
     return null
@@ -54,22 +67,40 @@ const getPosts = async (
     }
 
     const postsSnapshot = await getDocs(q)
-    const posts = postsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-    }))
+    const posts = postsSnapshot.docs.map((doc) => {
+        const post = PostSchema.safeParse({
+            id: doc.id,
+            ...doc.data(),
+        })
+
+        if (post.success) {
+            return post.data
+        } else {
+            console.error(post.error)
+            return null
+        }
+    })
 
     return {
-        posts,
+        posts: posts.filter((post) => post !== null),
         lastDoc: postsSnapshot.docs[postsSnapshot.docs.length - 1],
         hasMore: postsSnapshot.docs.length === pageSize,
     }
+}
+
+const updatePost = async (id: string, payload: UpdatePostPayload) => {
+    const postRef = doc(postsCollection, id)
+    await updateDoc(postRef, {
+        ...payload,
+        updatedAt: serverTimestamp(),
+    })
 }
 
 const postService = {
     createPost,
     getPost,
     getPosts,
+    updatePost,
 }
 
 export default postService

@@ -2,27 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useAuth } from '@/lib/contexts/AuthContext'
 import postService from '@/services/post.service'
 import Link from 'next/link'
-
-interface Post {
-    id: string
-    title: string
-    content: string
-    authorId: string
-    authorEmail: string
-    createdAt: {
-        seconds: number
-        nanoseconds: number
-    }
-    updatedAt: {
-        seconds: number
-        nanoseconds: number
-    }
-}
+import { Post } from '@/types/post'
 
 export default function ViewPostPage() {
     const params = useParams()
+    const { user } = useAuth()
     const [post, setPost] = useState<Post | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
@@ -33,14 +20,7 @@ export default function ViewPostPage() {
                 const postId = params.id as string
                 const post = await postService.getPost(postId)
 
-                if (post) {
-                    setPost({
-                        id: post.id,
-                        ...post,
-                    } as Post)
-                } else {
-                    setError('Post not found')
-                }
+                setPost(post)
             } catch (err) {
                 console.error(err)
                 setError('Failed to fetch post')
@@ -48,7 +28,6 @@ export default function ViewPostPage() {
                 setLoading(false)
             }
         }
-
         fetchPost()
     }, [params.id])
 
@@ -92,13 +71,21 @@ export default function ViewPostPage() {
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
-                <div className="mb-8">
+                <div className="mb-8 flex justify-between items-center">
                     <Link
                         href="/"
                         className="text-indigo-600 hover:text-indigo-500"
                     >
                         ← Back to homepage
                     </Link>
+                    {user && post && user.uid === post.authorId && (
+                        <Link
+                            href={`/post/${post.id}/edit`}
+                            className="text-indigo-600 hover:text-indigo-500"
+                        >
+                            Edit Post
+                        </Link>
+                    )}
                 </div>
 
                 <article className="bg-white shadow rounded-lg p-8">
@@ -109,13 +96,16 @@ export default function ViewPostPage() {
                         <div className="text-sm text-gray-500">
                             <span>By {post.authorEmail}</span>
                             <span className="mx-2">•</span>
-                            <span>Posted on {formatDate(post.createdAt)}</span>
-                            {post.createdAt.seconds !==
-                                post.updatedAt.seconds && (
+                            <span>
+                                Posted on {post.createdAt.toLocaleDateString()}
+                            </span>
+                            {post.createdAt.getTime() !==
+                                post.updatedAt.getTime() && (
                                 <>
                                     <span className="mx-2">•</span>
                                     <span>
-                                        Updated on {formatDate(post.updatedAt)}
+                                        Updated on{' '}
+                                        {post.updatedAt.toLocaleDateString()}
                                     </span>
                                 </>
                             )}
