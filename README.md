@@ -49,3 +49,18 @@ All DB operations are done in the API route.
 ### Stage 3
 
 Migrate DB to postgres.
+
+## Run project
+
+```bash
+pnpm install
+pnpm dev
+```
+
+## Firebase
+
+deploy rules and indexes
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+```
