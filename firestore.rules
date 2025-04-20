@@ -14,7 +14,7 @@ service cloud.firestore {
     // Posts collection rules
     match /posts/{postId} {
       // Allow read access to all authenticated users
-      allow read: if isAuthenticated();
+      allow read: if true;
       
       // Allow create if user is authenticated
       allow create: if isAuthenticated() 

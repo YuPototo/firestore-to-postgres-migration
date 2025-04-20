@@ -200,7 +200,21 @@ export default function ViewPostPage() {
                             }}
                         />
                         <div className="mt-4">
-                            <CommentList comments={comments} />
+                            <CommentList
+                                comments={comments}
+                                onCommentsChange={() => {
+                                    // Refresh comments after deletion
+                                    commentService
+                                        .getCommentsByPostId(post.id)
+                                        .then(setComments)
+                                        .catch((err) => {
+                                            console.error(err)
+                                            setError(
+                                                'Failed to refresh comments'
+                                            )
+                                        })
+                                }}
+                            />
                         </div>
                     </div>
                 </article>
