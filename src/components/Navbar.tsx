@@ -35,6 +35,12 @@ export default function Navbar() {
                         {user ? (
                             <>
                                 <Link
+                                    href="/me/post"
+                                    className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+                                >
+                                    My Posts
+                                </Link>
+                                <Link
                                     href="/post/create"
                                     className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
                                 >

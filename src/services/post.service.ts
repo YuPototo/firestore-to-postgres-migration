@@ -14,6 +14,7 @@ import {
     updateDoc,
     increment,
     runTransaction,
+    where,
 } from 'firebase/firestore'
 import {
     CreatePostPayload,
@@ -73,7 +74,8 @@ const getPost = async (id: string): Promise<Post | null> => {
 
 const getPosts = async (
     pageSize: number = 10,
-    lastDoc?: QueryDocumentSnapshot
+    lastDoc?: QueryDocumentSnapshot,
+    authorId?: string
 ) => {
     let q = query(
         postsCollection,
@@ -83,6 +85,10 @@ const getPosts = async (
 
     if (lastDoc) {
         q = query(q, startAfter(lastDoc))
+    }
+
+    if (authorId) {
+        q = query(q, where('authorId', '==', authorId))
     }
 
     const [postsSnapshot, totalCount] = await Promise.all([
