@@ -5,6 +5,12 @@ import {
     serverTimestamp,
     doc,
     getDoc,
+    getDocs,
+    query,
+    orderBy,
+    limit,
+    startAfter,
+    QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { CreatePostPayload } from '@/types/post'
 
@@ -33,9 +39,37 @@ const getPost = async (id: string) => {
     return null
 }
 
+const getPosts = async (
+    pageSize: number = 10,
+    lastDoc?: QueryDocumentSnapshot
+) => {
+    let q = query(
+        postsCollection,
+        orderBy('createdAt', 'desc'),
+        limit(pageSize)
+    )
+
+    if (lastDoc) {
+        q = query(q, startAfter(lastDoc))
+    }
+
+    const postsSnapshot = await getDocs(q)
+    const posts = postsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    }))
+
+    return {
+        posts,
+        lastDoc: postsSnapshot.docs[postsSnapshot.docs.length - 1],
+        hasMore: postsSnapshot.docs.length === pageSize,
+    }
+}
+
 const postService = {
     createPost,
     getPost,
+    getPosts,
 }
 
 export default postService
