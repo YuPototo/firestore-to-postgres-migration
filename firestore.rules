@@ -32,5 +32,12 @@ service cloud.firestore {
       // but for this POC, we'll allow it
       allow write: if isAuthenticated();
     }
+
+    // Comments collection rules
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthor(resource.data);
+    }
   }
 } 

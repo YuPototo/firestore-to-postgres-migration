@@ -14,7 +14,7 @@ It's a simple blog platform.
 
 As a post owner, I can:
 - [x] create a post
-- [ ] delete a post 
+- [x] delete a post 
 - [x] edit a post
 
 As a post viewer, I can:

@@ -6,32 +6,40 @@ import { useAuth } from '@/lib/contexts/AuthContext'
 import postService from '@/services/post.service'
 import Link from 'next/link'
 import { Post } from '@/types/post'
-
+import { Comment as CommentType } from '@/types/comment'
+import { CommentList } from '@/components/comment/CommentList'
+import { AddComment } from '@/components/comment/AddComment'
+import commentService from '@/services/comment.service'
 export default function ViewPostPage() {
     const params = useParams()
     const router = useRouter()
     const { user } = useAuth()
     const [post, setPost] = useState<Post | null>(null)
+    const [comments, setComments] = useState<CommentType[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
-        const fetchPost = async () => {
+        const fetchPostAndComments = async () => {
             try {
                 const postId = params.id as string
-                const post = await postService.getPost(postId)
+                const [post, postComments] = await Promise.all([
+                    postService.getPost(postId),
+                    commentService.getCommentsByPostId(postId),
+                ])
 
                 setPost(post)
+                setComments(postComments)
             } catch (err) {
                 console.error(err)
-                setError('Failed to fetch post')
+                setError('Failed to fetch post and comments')
             } finally {
                 setLoading(false)
             }
         }
-        fetchPost()
+        fetchPostAndComments()
     }, [params.id])
 
     const handleDelete = async () => {
@@ -172,6 +180,28 @@ export default function ViewPostPage() {
                         <p className="whitespace-pre-wrap text-gray-700">
                             {post.content}
                         </p>
+                    </div>
+
+                    <div className="mt-8">
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                            Comments
+                        </h2>
+                        <AddComment
+                            postId={post.id}
+                            onCommentAdded={() => {
+                                // Refresh comments after adding a new one
+                                commentService
+                                    .getCommentsByPostId(post.id)
+                                    .then(setComments)
+                                    .catch((err) => {
+                                        console.error(err)
+                                        setError('Failed to refresh comments')
+                                    })
+                            }}
+                        />
+                        <div className="mt-4">
+                            <CommentList comments={comments} />
+                        </div>
                     </div>
                 </article>
             </div>
