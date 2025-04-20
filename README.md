@@ -6,19 +6,20 @@ It's a simple blog platform.
 
 ### User module
 
-- [ ] User can sign up
-- [ ] User can sign in
+- [x] User can sign up
+- [x] User can sign in
 - [ ] User can sign out
 
 ### Post module
 
 As a post owner, I can:
-- [ ] create a post
+- [x] create a post
 - [ ] delete a post 
 - [ ] edit a post
 
 As a post viewer, I can:
-- [ ] view a post
+- [x] view a post
+- [x] view the list of posts
 
 ### Comment module
 
