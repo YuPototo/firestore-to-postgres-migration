@@ -25,16 +25,8 @@ As a post viewer, I can:
 
 As a user, I can:
 
-- [ ] comment on a post
-- [ ] delete my comment
-- [ ] edit my comment
-
-### Like module
-
-As a user, I can:
-
-- [ ] like a post
-- [ ] unlike a post
+- [x] comment on a post
+- [x] delete my comment
 
 ## Tech stacks
 
