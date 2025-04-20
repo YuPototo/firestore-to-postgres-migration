@@ -8,14 +8,14 @@ It's a simple blog platform.
 
 - [x] User can sign up
 - [x] User can sign in
-- [ ] User can sign out
+- [x] User can sign out
 
 ### Post module
 
 As a post owner, I can:
 - [x] create a post
 - [ ] delete a post 
-- [ ] edit a post
+- [x] edit a post
 
 As a post viewer, I can:
 - [x] view a post

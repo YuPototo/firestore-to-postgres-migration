@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
 import postService from '@/services/post.service'
 import Link from 'next/link'
@@ -9,10 +9,13 @@ import { Post } from '@/types/post'
 
 export default function ViewPostPage() {
     const params = useParams()
+    const router = useRouter()
     const { user } = useAuth()
     const [post, setPost] = useState<Post | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     useEffect(() => {
         const fetchPost = async () => {
@@ -30,6 +33,22 @@ export default function ViewPostPage() {
         }
         fetchPost()
     }, [params.id])
+
+    const handleDelete = async () => {
+        if (!post) return
+
+        setIsDeleting(true)
+        try {
+            await postService.deletePost(post.id)
+            router.push('/')
+        } catch (err) {
+            console.error(err)
+            setError('Failed to delete post')
+        } finally {
+            setIsDeleting(false)
+            setShowDeleteConfirm(false)
+        }
+    }
 
     if (loading) {
         return (
@@ -79,14 +98,51 @@ export default function ViewPostPage() {
                         ← Back to homepage
                     </Link>
                     {user && post && user.uid === post.authorId && (
-                        <Link
-                            href={`/post/${post.id}/edit`}
-                            className="text-indigo-600 hover:text-indigo-500"
-                        >
-                            Edit Post
-                        </Link>
+                        <div className="flex space-x-4">
+                            <Link
+                                href={`/post/${post.id}/edit`}
+                                className="text-indigo-600 hover:text-indigo-500"
+                            >
+                                Edit Post
+                            </Link>
+                            <button
+                                onClick={() => setShowDeleteConfirm(true)}
+                                className="text-red-600 hover:text-red-500"
+                            >
+                                Delete Post
+                            </button>
+                        </div>
                     )}
                 </div>
+
+                {/* Delete Confirmation Dialog */}
+                {showDeleteConfirm && (
+                    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+                        <div className="bg-white rounded-lg p-8 max-w-md w-full">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                Are you sure you want to delete this post?
+                            </h3>
+                            <p className="text-gray-500 mb-6">
+                                This action cannot be undone.
+                            </p>
+                            <div className="flex justify-end space-x-4">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={isDeleting}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isDeleting ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <article className="bg-white shadow rounded-lg p-8">
                     <header className="mb-8">

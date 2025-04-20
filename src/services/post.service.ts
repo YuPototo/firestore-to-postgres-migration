@@ -14,6 +14,7 @@ import {
     updateDoc,
     increment,
     runTransaction,
+    deleteDoc,
 } from 'firebase/firestore'
 import {
     CreatePostPayload,
@@ -78,7 +79,7 @@ const getPosts = async (
     let q = query(
         postsCollection,
         orderBy('createdAt', 'desc'),
-        limit(pageSize)
+        limit(pageSize + 1)
     )
 
     if (lastDoc) {
@@ -105,10 +106,10 @@ const getPosts = async (
     })
 
     return {
-        posts: posts.filter((post) => post !== null),
-        lastDoc: postsSnapshot.docs[postsSnapshot.docs.length - 1],
-        hasMore: postsSnapshot.docs.length === pageSize,
-        totalPages: Math.ceil(totalCount / pageSize),
+        posts: posts.slice(0, pageSize).filter((post) => post !== null),
+        // -2 because we're adding 1 to the pageSize to check if there's more
+        lastDoc: postsSnapshot.docs[postsSnapshot.docs.length - 2],
+        hasMore: postsSnapshot.docs.length === pageSize + 1,
         totalCount,
     }
 }
@@ -121,11 +122,32 @@ const updatePost = async (id: string, payload: UpdatePostPayload) => {
     })
 }
 
+const deletePost = async (id: string) => {
+    return await runTransaction(db, async (transaction) => {
+        const postRef = doc(postsCollection, id)
+        const postDoc = await getDoc(postRef)
+        const counterDoc = await getDoc(postsCounterRef)
+
+        if (!postDoc.exists()) {
+            throw new Error('Post not found')
+        }
+
+        // Delete the post
+        transaction.delete(postRef)
+
+        // Update the counter
+        if (counterDoc.exists()) {
+            transaction.update(postsCounterRef, { count: increment(-1) })
+        }
+    })
+}
+
 const postService = {
     createPost,
     getPost,
     getPosts,
     updatePost,
+    deletePost,
 }
 
 export default postService
