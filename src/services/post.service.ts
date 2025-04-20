@@ -12,6 +12,8 @@ import {
     startAfter,
     QueryDocumentSnapshot,
     updateDoc,
+    increment,
+    runTransaction,
 } from 'firebase/firestore'
 import {
     CreatePostPayload,
@@ -21,14 +23,31 @@ import {
 } from '@/types/post'
 
 const postsCollection = collection(db, 'posts')
+const postsCounterRef = doc(db, 'counters', 'posts')
 
-const createPost = async (payload: CreatePostPayload) => {
-    const postRef = await addDoc(postsCollection, {
-        ...payload,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+const getTotalPostsCount = async (): Promise<number> => {
+    const counterDoc = await getDoc(postsCounterRef)
+    return counterDoc.exists() ? counterDoc.data().count : 0
+}
+
+const createPost = async (payload: CreatePostPayload): Promise<string> => {
+    return await runTransaction(db, async (transaction) => {
+        const postRef = await addDoc(postsCollection, {
+            ...payload,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        })
+
+        // Update the counter
+        const counterDoc = await getDoc(postsCounterRef)
+        if (counterDoc.exists()) {
+            transaction.update(postsCounterRef, { count: increment(1) })
+        } else {
+            transaction.set(postsCounterRef, { count: 1 })
+        }
+
+        return postRef.id
     })
-    return postRef.id
 }
 
 const getPost = async (id: string): Promise<Post | null> => {
@@ -66,7 +85,11 @@ const getPosts = async (
         q = query(q, startAfter(lastDoc))
     }
 
-    const postsSnapshot = await getDocs(q)
+    const [postsSnapshot, totalCount] = await Promise.all([
+        getDocs(q),
+        getTotalPostsCount(),
+    ])
+
     const posts = postsSnapshot.docs.map((doc) => {
         const post = PostSchema.safeParse({
             id: doc.id,
@@ -85,6 +108,8 @@ const getPosts = async (
         posts: posts.filter((post) => post !== null),
         lastDoc: postsSnapshot.docs[postsSnapshot.docs.length - 1],
         hasMore: postsSnapshot.docs.length === pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
+        totalCount,
     }
 }
 

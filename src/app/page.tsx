@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import PostCard from '@/components/post/PostCard'
 import postService from '@/services/post.service'
 import { Post } from '@/types/post'
+import { QueryDocumentSnapshot } from 'firebase/firestore'
 
 export default function Home() {
     const [posts, setPosts] = useState<Post[]>([])
@@ -11,14 +12,37 @@ export default function Home() {
     const [error, setError] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [hasMore, setHasMore] = useState(true)
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(
+        undefined
+    )
+    const [pageHistory, setPageHistory] = useState<{
+        [key: number]: QueryDocumentSnapshot | undefined
+    }>({})
 
-    const fetchPosts = async (page: number) => {
+    const fetchPosts = async (
+        page: number,
+        direction: 'next' | 'prev' = 'next'
+    ) => {
         try {
             setLoading(true)
-            const { posts: newPosts, hasMore: newHasMore } =
-                await postService.getPosts(10)
+            const cursor =
+                direction === 'next' ? lastDoc : pageHistory[page - 1]
+
+            const {
+                posts: newPosts,
+                hasMore: newHasMore,
+                lastDoc: newLastDoc,
+            } = await postService.getPosts(10, cursor)
+
             setPosts(newPosts as Post[])
             setHasMore(newHasMore)
+            setLastDoc(newLastDoc)
+
+            // Update page history
+            setPageHistory((prev) => ({
+                ...prev,
+                [page]: newLastDoc,
+            }))
         } catch (err) {
             console.error(err)
             setError('Failed to fetch posts')
@@ -27,9 +51,19 @@ export default function Home() {
         }
     }
 
+    const handleNextPage = () => {
+        setCurrentPage((prev) => prev + 1)
+        fetchPosts(currentPage + 1, 'next')
+    }
+
+    const handlePrevPage = () => {
+        setCurrentPage((prev) => prev - 1)
+        fetchPosts(currentPage - 1, 'prev')
+    }
+
     useEffect(() => {
-        fetchPosts(currentPage)
-    }, [currentPage])
+        fetchPosts(1)
+    }, [])
 
     if (loading && posts.length === 0) {
         return (
@@ -61,16 +95,17 @@ export default function Home() {
 
                 <div className="mt-8 flex justify-center space-x-2">
                     <button
-                        onClick={() =>
-                            setCurrentPage((prev) => Math.max(1, prev - 1))
-                        }
+                        onClick={handlePrevPage}
                         disabled={currentPage === 1}
                         className="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Previous
                     </button>
+                    <span className="px-4 py-2 text-gray-700">
+                        Page {currentPage}
+                    </span>
                     <button
-                        onClick={() => setCurrentPage((prev) => prev + 1)}
+                        onClick={handleNextPage}
                         disabled={!hasMore}
                         className="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
