@@ -28,27 +28,6 @@ const createComment = async (
     return commentRef.id
 }
 
-const getComment = async (id: string): Promise<Comment | null> => {
-    const commentRef = doc(commentsCollection, id)
-    const commentDoc = await getDoc(commentRef)
-
-    if (commentDoc.exists()) {
-        const comment = CommentSchema.safeParse({
-            id: commentDoc.id,
-            ...commentDoc.data(),
-        })
-
-        if (comment.success) {
-            return comment.data
-        } else {
-            console.error(comment.error)
-            return null
-        }
-    }
-
-    return null
-}
-
 const getCommentsByPostId = async (postId: string): Promise<Comment[]> => {
     const q = query(
         commentsCollection,
@@ -89,7 +68,6 @@ const deleteComment = async (id: string) => {
 
 const commentService = {
     createComment,
-    getComment,
     getCommentsByPostId,
     updateComment,
     deleteComment,
