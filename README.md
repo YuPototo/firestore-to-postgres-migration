@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+An POC app to do a FireStore to Postgres migration
 
-## Getting Started
+It's a simple blog platform.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### User module
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- [ ] User can sign up
+- [ ] User can sign in
+- [ ] User can sign out
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Post module
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+As a post owner, I can:
+- [ ] create a post
+- [ ] delete a post 
+- [ ] edit a post
 
-## Learn More
+As a post viewer, I can:
+- [ ] view a post
 
-To learn more about Next.js, take a look at the following resources:
+### Comment module
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+As a user, I can:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [ ] comment on a post
+- [ ] delete my comment
+- [ ] edit my comment
 
-## Deploy on Vercel
+### Like module
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+As a user, I can:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] like a post
+- [ ] unlike a post
+
+## Tech stacks
+
+- Next.js 15 app router
+- All pages are client components
+- Firestore as DB
+- Firebase/auth as auth service
+
+
+### Stage 1
+
+All DB operations are done in the client component.
+
+
+### Stage 2
+
+All DB operations are done in the API route.
+
+
+### Stage 3
+
+Migrate DB to postgres.
