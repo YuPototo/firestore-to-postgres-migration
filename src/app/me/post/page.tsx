@@ -103,7 +103,7 @@ export default function MyPostsPage() {
                 {posts.length === 0 ? (
                     <div className="text-center py-12">
                         <p className="text-gray-500 text-lg">
-                            You haven't created any posts yet.
+                            You have no posts yet.
                         </p>
                         <Link
                             href="/post/create"

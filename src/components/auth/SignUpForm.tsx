@@ -25,6 +25,7 @@ export default function SignUpForm() {
             // todo: redirect to from page
             router.push('/')
         } catch (err) {
+            console.error(err)
             setError('Failed to create an account. Please try again.')
         }
     }

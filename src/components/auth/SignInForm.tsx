@@ -18,6 +18,7 @@ export default function SignInForm() {
             // todo: redirect to from page
             router.push('/')
         } catch (err) {
+            console.error(err)
             setError('Failed to sign in. Please check your credentials.')
         }
     }

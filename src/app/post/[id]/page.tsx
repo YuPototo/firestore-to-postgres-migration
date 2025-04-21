@@ -82,19 +82,6 @@ export default function ViewPostPage() {
         )
     }
 
-    const formatDate = (timestamp: {
-        seconds: number
-        nanoseconds: number
-    }) => {
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        })
-    }
-
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
