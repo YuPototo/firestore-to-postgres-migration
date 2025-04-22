@@ -32,13 +32,31 @@ const PostDTO = z.object({
     updatedAt: z.string(),
 })
 
+const UpdatePostDTO = PostSchema.pick({
+    title: true,
+    content: true,
+})
+
 type Post = z.infer<typeof PostSchema>
 
 type CreatePostPayload = z.infer<typeof CreatePostSchema>
 type UpdatePostPayload = z.infer<typeof UpdatePostSchema>
 
 type PostDtoType = z.infer<typeof PostDTO>
+type UpdatePostDtoType = z.infer<typeof UpdatePostDTO>
 
-export { PostSchema, CreatePostSchema, UpdatePostSchema, PostDTO }
+export {
+    PostSchema,
+    CreatePostSchema,
+    UpdatePostSchema,
+    PostDTO,
+    UpdatePostDTO,
+}
 
-export type { Post, CreatePostPayload, UpdatePostPayload, PostDtoType }
+export type {
+    Post,
+    CreatePostPayload,
+    UpdatePostPayload,
+    PostDtoType,
+    UpdatePostDtoType,
+}

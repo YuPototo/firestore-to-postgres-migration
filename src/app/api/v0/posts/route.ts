@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
 import verifyRequest from '@/server/verifyToken'
 import postService from '@/server/services/post.service'
-import { CreatePostPayload } from '@/types/post'
+import { CreatePostPayload, UpdatePostDTO } from '@/types/post'
 import { z } from 'zod'
 
 const CreatePostDTO = z.object({
@@ -65,6 +65,34 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await postService.createPost(postPayload)
+
+    return NextResponse.json(data)
+}
+
+/**
+ * PUT api/v0/posts/:id
+ *
+ * Update a post
+ */
+export async function PUT(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    const { id } = params
+
+    const requestBody = await req.json()
+
+    const updatePostPayload = UpdatePostDTO.safeParse(requestBody)
+
+    if (!updatePostPayload.success) {
+        console.error(updatePostPayload.error)
+        return NextResponse.json(
+            { error: 'Invalid request body' },
+            { status: 400 }
+        )
+    }
+
+    const data = await postService.updatePost(id, updatePostPayload.data)
 
     return NextResponse.json(data)
 }

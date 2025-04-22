@@ -1,7 +1,10 @@
 import 'server-only'
 
 import admin, { db } from '@/server/firebaseAdmin'
-import { CreatePostPayload, PostDTO } from '@/types/post'
+import { CreatePostPayload, PostDTO, UpdatePostPayload } from '@/types/post'
+import { doc } from 'firebase/firestore'
+import { serverTimestamp } from 'firebase/firestore'
+import { updateDoc } from 'firebase/firestore'
 
 // Collection references
 const postsCollection = db.collection('posts')
@@ -88,10 +91,42 @@ const getPosts = async (
     }
 }
 
+const getPostById = async (id: string) => {
+    const postRef = postsCollection.doc(id)
+    const postDoc = await postRef.get()
+
+    if (!postDoc.exists) {
+        throw new Error('Post not found')
+    }
+
+    const post = PostDTO.safeParse({
+        ...postDoc.data(),
+        id: postDoc.id,
+        createdAt: postDoc.data()?.createdAt.toDate().toISOString(),
+        updatedAt: postDoc.data()?.updatedAt.toDate().toISOString(),
+    })
+
+    if (!post.success) {
+        throw new Error('Post validation failed')
+    }
+
+    return post.data
+}
+
+const updatePost = async (id: string, payload: UpdatePostPayload) => {
+    const postRef = postsCollection.doc(id)
+    await postRef.update({
+        ...payload,
+        updatedAt: new Date(),
+    })
+}
+
 const postService = {
     createPost,
     getPosts,
     getTotalPostsCount,
+    updatePost,
+    getPostById,
 }
 
 export default postService

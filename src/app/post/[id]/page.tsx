@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import postService from '@/services/post.service'
 import Link from 'next/link'
-import { Post } from '@/types/post'
+import { Post, PostSchema } from '@/types/post'
 import { Comment as CommentType } from '@/types/comment'
 import { CommentList } from '@/components/comment/CommentList'
 import { AddComment } from '@/components/comment/AddComment'
 import commentService from '@/services/comment.service'
+
 export default function ViewPostPage() {
     const params = useParams()
     const router = useRouter()
@@ -25,11 +25,19 @@ export default function ViewPostPage() {
         const fetchPostAndComments = async () => {
             try {
                 const postId = params.id as string
-                const [post, postComments] = await Promise.all([
-                    postService.getPost(postId),
-                    commentService.getCommentsByPostId(postId),
-                ])
 
+                const postResponse = await fetch(`/api/v0/posts/${postId}`)
+                const postData = await postResponse.json()
+
+                const post = PostSchema.parse({
+                    ...postData,
+                    createdAt: new Date(postData.createdAt),
+                    updatedAt: new Date(postData.updatedAt),
+                })
+
+                const postComments = await commentService.getCommentsByPostId(
+                    postId
+                )
                 setPost(post)
                 setComments(postComments)
             } catch (err) {
@@ -47,7 +55,7 @@ export default function ViewPostPage() {
 
         setIsDeleting(true)
         try {
-            await postService.deletePost(post.id)
+            // await postService.deletePost(post.id)
             router.push('/')
         } catch (err) {
             console.error(err)
