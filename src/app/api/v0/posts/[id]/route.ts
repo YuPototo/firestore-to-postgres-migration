@@ -27,9 +27,8 @@ export async function PUT(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
-    let decoded
     try {
-        decoded = await verifyRequest(req)
+        await verifyRequest(req)
     } catch {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -62,9 +61,8 @@ export async function DELETE(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
-    let decoded
     try {
-        decoded = await verifyRequest(req)
+        await verifyRequest(req)
     } catch {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
