@@ -42,12 +42,12 @@ export default function MyPostsPage() {
 
             setPosts(posts)
             setHasMore(data.hasMore)
-            setLastPostId(data.lastDoc)
+            setLastPostId(data.lastPostId)
 
             // Update page history
             setPageHistory((prev) => ({
                 ...prev,
-                [page]: data.lastDoc,
+                [page]: data.lastPostId,
             }))
         } catch (err) {
             console.error(err)

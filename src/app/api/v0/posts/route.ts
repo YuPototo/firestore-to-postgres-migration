@@ -16,10 +16,10 @@ const CreatePostDTO = z.object({
  */
 export async function GET(req: NextRequest) {
     const pageSize = 10
-    const lastDocId = req.nextUrl.searchParams.get('lastDocId') ?? undefined
+    const lastPostId = req.nextUrl.searchParams.get('lastPostId') ?? undefined
     const authorId = req.nextUrl.searchParams.get('authorId') ?? undefined
 
-    const data = await postService.getPosts(pageSize, lastDocId, authorId)
+    const data = await postService.getPosts(pageSize, lastPostId, authorId)
 
     return NextResponse.json(data)
 }

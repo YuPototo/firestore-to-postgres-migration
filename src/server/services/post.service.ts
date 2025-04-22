@@ -40,18 +40,22 @@ const getTotalPostsCount = async (): Promise<number> => {
 
 const getPosts = async (
     pageSize: number = 10,
-    lastDocId?: string,
+    lastPostId?: string,
     authorId?: string
 ) => {
     let query = postsCollection.orderBy('createdAt', 'desc').limit(pageSize + 1)
 
-    if (lastDocId) {
-        const lastDoc = await postsCollection.doc(lastDocId).get()
-        query = query.startAfter(lastDoc)
-    }
-
     if (authorId) {
         query = query.where('authorId', '==', authorId)
+    }
+
+    if (lastPostId) {
+        console.log('lastPostId', lastPostId)
+        const lastDoc = await postsCollection.doc(lastPostId).get()
+
+        if (lastDoc.exists) {
+            query = query.startAfter(lastDoc)
+        }
     }
 
     const [postsSnapshot, totalCount] = await Promise.all([
@@ -78,7 +82,7 @@ const getPosts = async (
     return {
         posts: posts.slice(0, pageSize).filter((post) => post !== null),
         // -2 because we're adding 1 to the pageSize to check if there's more
-        lastDoc: postsSnapshot.docs[postsSnapshot.docs.length - 2],
+        lastPostId: postsSnapshot.docs[postsSnapshot.docs.length - 2]?.id,
         hasMore: postsSnapshot.docs.length === pageSize + 1,
         totalCount,
     }
