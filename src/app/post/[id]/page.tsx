@@ -55,7 +55,17 @@ export default function ViewPostPage() {
 
         setIsDeleting(true)
         try {
-            // await postService.deletePost(post.id)
+            const token = await user?.getIdToken()
+            const response = await fetch(`/api/v0/posts/${post.id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+            if (!response.ok) {
+                setError('Failed to delete post')
+                return
+            }
             router.push('/')
         } catch (err) {
             console.error(err)

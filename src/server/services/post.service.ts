@@ -2,9 +2,6 @@ import 'server-only'
 
 import admin, { db } from '@/server/firebaseAdmin'
 import { CreatePostPayload, PostDTO, UpdatePostPayload } from '@/types/post'
-import { doc } from 'firebase/firestore'
-import { serverTimestamp } from 'firebase/firestore'
-import { updateDoc } from 'firebase/firestore'
 
 // Collection references
 const postsCollection = db.collection('posts')
@@ -121,12 +118,35 @@ const updatePost = async (id: string, payload: UpdatePostPayload) => {
     })
 }
 
+const deletePost = async (id: string) => {
+    return await db.runTransaction(async (transaction) => {
+        const postRef = postsCollection.doc(id)
+        const postDoc = await transaction.get(postRef)
+        const counterDoc = await transaction.get(postsCounterRef)
+
+        if (!postDoc.exists) {
+            throw new Error('Post not found')
+        }
+
+        // Delete the post
+        transaction.delete(postRef)
+
+        // Update the counter
+        if (counterDoc.exists) {
+            transaction.update(postsCounterRef, {
+                count: admin.firestore.FieldValue.increment(-1),
+            })
+        }
+    })
+}
+
 const postService = {
     createPost,
     getPosts,
     getTotalPostsCount,
     updatePost,
     getPostById,
+    deletePost,
 }
 
 export default postService

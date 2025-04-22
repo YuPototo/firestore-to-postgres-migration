@@ -1,8 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
 import verifyRequest from '@/server/verifyToken'
 import postService from '@/server/services/post.service'
-import { CreatePostPayload, UpdatePostDTO } from '@/types/post'
-import { z } from 'zod'
+import { UpdatePostDTO } from '@/types/post'
 
 /**
  * GET api/v0/posts/:id
@@ -10,7 +9,7 @@ import { z } from 'zod'
  * Get a post by id
  */
 export async function GET(
-    req: NextRequest,
+    _: NextRequest,
     { params }: { params: { id: string } }
 ) {
     const { id } = await params
@@ -28,6 +27,13 @@ export async function PUT(
     req: NextRequest,
     { params }: { params: { id: string } }
 ) {
+    let decoded
+    try {
+        decoded = await verifyRequest(req)
+    } catch {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const requestBody = await req.json()
 
     const updatePostPayload = UpdatePostDTO.safeParse(requestBody)
@@ -45,4 +51,25 @@ export async function PUT(
     await postService.updatePost(id, updatePostPayload.data)
 
     return NextResponse.json({ message: 'Post updated' })
+}
+
+/**
+ * DELETE api/v0/posts/:id
+ *
+ * Delete a post
+ */
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    let decoded
+    try {
+        decoded = await verifyRequest(req)
+    } catch {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+    await postService.deletePost(id)
+    return NextResponse.json({ message: 'Post deleted' })
 }
