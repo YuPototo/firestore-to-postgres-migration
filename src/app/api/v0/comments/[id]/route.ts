@@ -9,7 +9,7 @@ import commentService from '@/server/services/comment.service'
  */
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         await verifyRequest(req)
