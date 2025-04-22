@@ -1,4 +1,4 @@
-// lib/firebaseAdmin.ts
+import 'server-only'
 import * as admin from 'firebase-admin'
 
 if (!admin.apps.length) {
