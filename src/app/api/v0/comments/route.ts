@@ -1,33 +1,31 @@
 import { NextResponse, NextRequest } from 'next/server'
 import verifyRequest from '@/server/verifyToken'
-import postService from '@/server/services/post.service'
-import { CreatePostPayload } from '@/types/post'
 import { z } from 'zod'
+import commentService from '@/server/services/comment.service'
+import { CreateCommentPayload } from '@/types/comment'
 
-const CreatePostDTO = z.object({
-    title: z.string(),
+const CreateCommentDTO = z.object({
+    postId: z.string(),
     content: z.string(),
 })
 
 /**
- * GET api/v0/posts
+ * GET api/v0/comments
  *
- * Get all posts
+ * Get all comments
  */
 export async function GET(req: NextRequest) {
-    const pageSize = 10
-    const lastPostId = req.nextUrl.searchParams.get('lastPostId') ?? undefined
-    const authorId = req.nextUrl.searchParams.get('authorId') ?? undefined
+    const postId = req.nextUrl.searchParams.get('postId') as string
 
-    const data = await postService.getPosts(pageSize, lastPostId, authorId)
+    const data = await commentService.getCommentsByPostId(postId)
 
     return NextResponse.json(data)
 }
 
 /**
- * POST api/v0/posts
+ * POST api/v0/comments
  *
- * Create a new post
+ * Create a new comment
  */
 export async function POST(req: NextRequest) {
     let decoded
@@ -39,10 +37,10 @@ export async function POST(req: NextRequest) {
 
     const requestBody = await req.json()
 
-    const post = CreatePostDTO.safeParse(requestBody)
+    const comment = CreateCommentDTO.safeParse(requestBody)
 
-    if (!post.success) {
-        console.error(post.error)
+    if (!comment.success) {
+        console.error(comment.error)
         return NextResponse.json(
             { error: 'Invalid request body' },
             { status: 400 }
@@ -58,13 +56,13 @@ export async function POST(req: NextRequest) {
         )
     }
 
-    const postPayload: CreatePostPayload = {
-        ...post.data,
+    const commentPayload: CreateCommentPayload = {
+        ...comment.data,
         authorId: decoded.uid,
         authorEmail: userEmail,
     }
 
-    const data = await postService.createPost(postPayload)
+    const data = await commentService.createComment(commentPayload)
 
     return NextResponse.json(data)
 }

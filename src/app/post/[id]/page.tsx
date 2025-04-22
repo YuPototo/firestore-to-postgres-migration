@@ -5,10 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
 import Link from 'next/link'
 import { Post, PostSchema } from '@/types/post'
-import { Comment as CommentType } from '@/types/comment'
+import { Comment as CommentType, CommentSchema } from '@/types/comment'
 import { CommentList } from '@/components/comment/CommentList'
 import { AddComment } from '@/components/comment/AddComment'
-import commentService from '@/services/comment.service'
 
 export default function ViewPostPage() {
     const params = useParams()
@@ -20,6 +19,30 @@ export default function ViewPostPage() {
     const [error, setError] = useState('')
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
+
+    const handleGetComments = async () => {
+        try {
+            const postId = params.id as string
+
+            const commentsResponse = await fetch(
+                `/api/v0/comments?postId=${postId}`
+            )
+            const commentsData = await commentsResponse.json()
+
+            const comments = commentsData.map((comment: CommentType) =>
+                CommentSchema.parse({
+                    ...comment,
+                    createdAt: new Date(comment.createdAt),
+                    updatedAt: new Date(comment.updatedAt),
+                })
+            )
+
+            setComments(comments)
+        } catch (err) {
+            console.error(err)
+            setError('Failed to fetch comments')
+        }
+    }
 
     useEffect(() => {
         const fetchPostAndComments = async () => {
@@ -35,17 +58,15 @@ export default function ViewPostPage() {
                     updatedAt: new Date(postData.updatedAt),
                 })
 
-                const postComments = await commentService.getCommentsByPostId(
-                    postId
-                )
                 setPost(post)
-                setComments(postComments)
             } catch (err) {
                 console.error(err)
                 setError('Failed to fetch post and comments')
             } finally {
                 setLoading(false)
             }
+
+            handleGetComments()
         }
         fetchPostAndComments()
     }, [params.id])
@@ -193,32 +214,12 @@ export default function ViewPostPage() {
                         </h2>
                         <AddComment
                             postId={post.id}
-                            onCommentAdded={() => {
-                                // Refresh comments after adding a new one
-                                commentService
-                                    .getCommentsByPostId(post.id)
-                                    .then(setComments)
-                                    .catch((err) => {
-                                        console.error(err)
-                                        setError('Failed to refresh comments')
-                                    })
-                            }}
+                            onCommentAdded={handleGetComments}
                         />
                         <div className="mt-4">
                             <CommentList
                                 comments={comments}
-                                onCommentsChange={() => {
-                                    // Refresh comments after deletion
-                                    commentService
-                                        .getCommentsByPostId(post.id)
-                                        .then(setComments)
-                                        .catch((err) => {
-                                            console.error(err)
-                                            setError(
-                                                'Failed to refresh comments'
-                                            )
-                                        })
-                                }}
+                                onCommentsChange={handleGetComments}
                             />
                         </div>
                     </div>
