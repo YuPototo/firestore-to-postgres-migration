@@ -10,7 +10,7 @@ import { UpdatePostDTO } from '@/types/post'
  */
 export async function GET(
     _: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params
     const data = await postService.getPostById(id)
