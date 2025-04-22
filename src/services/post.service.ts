@@ -59,6 +59,8 @@ const getPost = async (id: string): Promise<Post | null> => {
         const post = PostSchema.safeParse({
             id: postDoc.id,
             ...postDoc.data(),
+            createdAt: postDoc.data().createdAt.toDate(),
+            updatedAt: postDoc.data().updatedAt.toDate(),
         })
 
         if (post.success) {

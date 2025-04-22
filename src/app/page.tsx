@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import PostCard from '@/components/post/PostCard'
-import postService from '@/services/post.service'
-import { Post } from '@/types/post'
-import { QueryDocumentSnapshot } from 'firebase/firestore'
+import { Post, PostDtoType } from '@/types/post'
 
 export default function Home() {
     const [posts, setPosts] = useState<Post[]>([])
@@ -12,11 +10,9 @@ export default function Home() {
     const [error, setError] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [hasMore, setHasMore] = useState(true)
-    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(
-        undefined
-    )
+    const [lastPostId, setLastPostId] = useState<string | undefined>(undefined)
     const [pageHistory, setPageHistory] = useState<{
-        [key: number]: QueryDocumentSnapshot | undefined
+        [key: number]: string | undefined
     }>({})
 
     const fetchPosts = async (
@@ -26,22 +22,27 @@ export default function Home() {
         try {
             setLoading(true)
             const cursor =
-                direction === 'next' ? lastDoc : pageHistory[page - 1]
+                direction === 'next' ? lastPostId : pageHistory[page - 1]
 
-            const {
-                posts: newPosts,
-                hasMore: newHasMore,
-                lastDoc: newLastDoc,
-            } = await postService.getPosts(10, cursor)
+            const response = await fetch(
+                `/api/v0/posts?direction=${direction}&lastPostId=${cursor}`
+            )
+            const data = await response.json()
 
-            setPosts(newPosts as Post[])
-            setHasMore(newHasMore)
-            setLastDoc(newLastDoc)
+            const posts: Post[] = data.posts.map((post: PostDtoType) => ({
+                ...post,
+                createdAt: new Date(post.createdAt),
+                updatedAt: new Date(post.updatedAt),
+            }))
+
+            setPosts(posts)
+            setHasMore(data.hasMore)
+            setLastPostId(data.lastPostId)
 
             // Update page history
             setPageHistory((prev) => ({
                 ...prev,
-                [page]: newLastDoc,
+                [page]: data.lastPostId,
             }))
         } catch (err) {
             console.error(err)
