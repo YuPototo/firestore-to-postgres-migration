@@ -1,12 +1,7 @@
 import 'server-only'
 
 import admin, { db } from '@/server/firebaseAdmin'
-import {
-    CreatePostPayload,
-    UpdatePostPayload,
-    Post,
-    PostSchema,
-} from '@/types/post'
+import { CreatePostPayload } from '@/types/post'
 
 // Collection references
 const postsCollection = db.collection('posts')
