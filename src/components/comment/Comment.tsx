@@ -1,7 +1,6 @@
 import { Comment as CommentType } from '@/types/comment'
 import { formatDistanceToNow } from 'date-fns'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import commentService from '@/services/comment.service'
 import { useState } from 'react'
 
 interface CommentProps {
@@ -17,7 +16,18 @@ export const Comment = ({ comment, onDelete }: CommentProps) => {
     const handleDelete = async () => {
         setIsDeleting(true)
         try {
-            await commentService.deleteComment(comment.id)
+            const token = await user?.getIdToken()
+            const response = await fetch(`/api/v0/comments/${comment.id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to delete comment')
+            }
+
             onDelete()
         } catch (err) {
             console.error(err)

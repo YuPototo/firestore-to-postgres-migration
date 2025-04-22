@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import postService from '@/services/post.service'
 
 export default function CreatePostPage() {
     const [title, setTitle] = useState('')
@@ -25,12 +24,24 @@ export default function CreatePostPage() {
         }
 
         try {
-            const postId = await postService.createPost({
-                title,
-                content,
-                authorId: user.uid,
-                authorEmail: user.email,
+            const token = await user.getIdToken()
+
+            const response = await fetch('/api/v0/posts', {
+                method: 'POST',
+                body: JSON.stringify({ title, content }),
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             })
+
+            if (!response.ok) {
+                setError('Failed to create post. Please try again.')
+                setLoading(false)
+                return
+            }
+
+            const postId = await response.json()
+
             router.push(`/post/${postId}`)
         } catch (err) {
             console.error(err)

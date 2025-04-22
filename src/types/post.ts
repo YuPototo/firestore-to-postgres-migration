@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { Timestamp } from 'firebase/firestore'
 
 const PostSchema = z.object({
     id: z.string(),
@@ -7,8 +6,8 @@ const PostSchema = z.object({
     content: z.string(),
     authorId: z.string(),
     authorEmail: z.string().email(),
-    createdAt: z.instanceof(Timestamp).transform((ts) => ts.toDate()),
-    updatedAt: z.instanceof(Timestamp).transform((ts) => ts.toDate()),
+    createdAt: z.date(),
+    updatedAt: z.date(),
 })
 
 const CreatePostSchema = PostSchema.omit({
@@ -22,11 +21,42 @@ const UpdatePostSchema = PostSchema.pick({
     content: true,
 })
 
+//for API response
+const PostDTO = z.object({
+    id: z.string(),
+    title: z.string(),
+    content: z.string(),
+    authorId: z.string(),
+    authorEmail: z.string().email(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+})
+
+const UpdatePostDTO = PostSchema.pick({
+    title: true,
+    content: true,
+})
+
 type Post = z.infer<typeof PostSchema>
 
 type CreatePostPayload = z.infer<typeof CreatePostSchema>
 type UpdatePostPayload = z.infer<typeof UpdatePostSchema>
 
-export { PostSchema, CreatePostSchema, UpdatePostSchema }
+type PostDtoType = z.infer<typeof PostDTO>
+type UpdatePostDtoType = z.infer<typeof UpdatePostDTO>
 
-export type { Post, CreatePostPayload, UpdatePostPayload }
+export {
+    PostSchema,
+    CreatePostSchema,
+    UpdatePostSchema,
+    PostDTO,
+    UpdatePostDTO,
+}
+
+export type {
+    Post,
+    CreatePostPayload,
+    UpdatePostPayload,
+    PostDtoType,
+    UpdatePostDtoType,
+}

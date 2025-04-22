@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import postService from '@/services/post.service'
 import Link from 'next/link'
-import { Post } from '@/types/post'
+import { Post, PostSchema } from '@/types/post'
 
 export default function EditPostPage() {
     const params = useParams()
@@ -22,14 +21,22 @@ export default function EditPostPage() {
         const fetchPost = async () => {
             try {
                 const postId = params.id as string
-                const post = await postService.getPost(postId)
 
-                if (post) {
-                    setPost(post)
-                    setTitle(post.title)
-                    setContent(post.content)
+                const postResponse = await fetch(`/api/v0/posts/${postId}`)
+                const postData = await postResponse.json()
+
+                const post = PostSchema.safeParse({
+                    ...postData,
+                    createdAt: new Date(postData.createdAt),
+                    updatedAt: new Date(postData.updatedAt),
+                })
+
+                if (post.success) {
+                    setPost(post.data)
+                    setTitle(post.data.title)
+                    setContent(post.data.content)
                 } else {
-                    setError('Post not found')
+                    setError('Post validation failed')
                 }
             } catch (err) {
                 console.error(err)
@@ -60,10 +67,22 @@ export default function EditPostPage() {
         }
 
         try {
-            await postService.updatePost(post.id, {
-                title,
-                content,
+            const token = await user.getIdToken()
+            const response = await fetch(`/api/v0/posts/${post.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ title, content }),
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             })
+            const data = await response.json()
+
+            if (data.error) {
+                setError(data.error)
+                setIsSubmitting(false)
+                return
+            }
+
             router.push(`/post/${post.id}`)
         } catch (err) {
             console.error(err)

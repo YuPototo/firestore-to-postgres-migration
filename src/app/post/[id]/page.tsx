@@ -3,13 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import postService from '@/services/post.service'
 import Link from 'next/link'
-import { Post } from '@/types/post'
-import { Comment as CommentType } from '@/types/comment'
+import { Post, PostSchema } from '@/types/post'
+import { Comment as CommentType, CommentSchema } from '@/types/comment'
 import { CommentList } from '@/components/comment/CommentList'
 import { AddComment } from '@/components/comment/AddComment'
-import commentService from '@/services/comment.service'
+
 export default function ViewPostPage() {
     const params = useParams()
     const router = useRouter()
@@ -21,23 +20,53 @@ export default function ViewPostPage() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
 
+    const handleGetComments = async () => {
+        try {
+            const postId = params.id as string
+
+            const commentsResponse = await fetch(
+                `/api/v0/comments?postId=${postId}`
+            )
+            const commentsData = await commentsResponse.json()
+
+            const comments = commentsData.map((comment: CommentType) =>
+                CommentSchema.parse({
+                    ...comment,
+                    createdAt: new Date(comment.createdAt),
+                    updatedAt: new Date(comment.updatedAt),
+                })
+            )
+
+            setComments(comments)
+        } catch (err) {
+            console.error(err)
+            setError('Failed to fetch comments')
+        }
+    }
+
     useEffect(() => {
         const fetchPostAndComments = async () => {
             try {
                 const postId = params.id as string
-                const [post, postComments] = await Promise.all([
-                    postService.getPost(postId),
-                    commentService.getCommentsByPostId(postId),
-                ])
+
+                const postResponse = await fetch(`/api/v0/posts/${postId}`)
+                const postData = await postResponse.json()
+
+                const post = PostSchema.parse({
+                    ...postData,
+                    createdAt: new Date(postData.createdAt),
+                    updatedAt: new Date(postData.updatedAt),
+                })
 
                 setPost(post)
-                setComments(postComments)
             } catch (err) {
                 console.error(err)
                 setError('Failed to fetch post and comments')
             } finally {
                 setLoading(false)
             }
+
+            handleGetComments()
         }
         fetchPostAndComments()
     }, [params.id])
@@ -47,7 +76,17 @@ export default function ViewPostPage() {
 
         setIsDeleting(true)
         try {
-            await postService.deletePost(post.id)
+            const token = await user?.getIdToken()
+            const response = await fetch(`/api/v0/posts/${post.id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+            if (!response.ok) {
+                setError('Failed to delete post')
+                return
+            }
             router.push('/')
         } catch (err) {
             console.error(err)
@@ -175,32 +214,12 @@ export default function ViewPostPage() {
                         </h2>
                         <AddComment
                             postId={post.id}
-                            onCommentAdded={() => {
-                                // Refresh comments after adding a new one
-                                commentService
-                                    .getCommentsByPostId(post.id)
-                                    .then(setComments)
-                                    .catch((err) => {
-                                        console.error(err)
-                                        setError('Failed to refresh comments')
-                                    })
-                            }}
+                            onCommentAdded={handleGetComments}
                         />
                         <div className="mt-4">
                             <CommentList
                                 comments={comments}
-                                onCommentsChange={() => {
-                                    // Refresh comments after deletion
-                                    commentService
-                                        .getCommentsByPostId(post.id)
-                                        .then(setComments)
-                                        .catch((err) => {
-                                            console.error(err)
-                                            setError(
-                                                'Failed to refresh comments'
-                                            )
-                                        })
-                                }}
+                                onCommentsChange={handleGetComments}
                             />
                         </div>
                     </div>

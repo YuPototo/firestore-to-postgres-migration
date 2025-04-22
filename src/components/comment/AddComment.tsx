@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import commentService from '@/services/comment.service'
 import { CreateCommentPayload } from '@/types/comment'
 
 interface AddCommentProps {
@@ -31,7 +30,22 @@ export const AddComment = ({ postId, onCommentAdded }: AddCommentProps) => {
                 authorEmail: user.email || '',
             }
 
-            await commentService.createComment(payload)
+            const token = await user.getIdToken()
+
+            const response = await fetch(`/api/v0/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            })
+
+            if (!response.ok) {
+                setError('Failed to add comment')
+                return
+            }
+
             setContent('')
             onCommentAdded()
         } catch (err) {

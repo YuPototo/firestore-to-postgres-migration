@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { Timestamp } from 'firebase/firestore'
 
 const CommentSchema = z.object({
     id: z.string(),
@@ -7,8 +6,19 @@ const CommentSchema = z.object({
     content: z.string(),
     authorId: z.string(),
     authorEmail: z.string().email(),
-    createdAt: z.instanceof(Timestamp).transform((ts) => ts.toDate()),
-    updatedAt: z.instanceof(Timestamp).transform((ts) => ts.toDate()),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+})
+
+//for API response
+const CommentDTO = z.object({
+    id: z.string(),
+    postId: z.string(),
+    content: z.string(),
+    authorId: z.string(),
+    authorEmail: z.string().email(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
 })
 
 const CreateCommentSchema = CommentSchema.omit({
@@ -19,6 +29,7 @@ const CreateCommentSchema = CommentSchema.omit({
 
 type Comment = z.infer<typeof CommentSchema>
 type CreateCommentPayload = z.infer<typeof CreateCommentSchema>
+type CommentDtoType = z.infer<typeof CommentDTO>
 
-export { CommentSchema, CreateCommentSchema }
-export type { Comment, CreateCommentPayload }
+export { CommentSchema, CreateCommentSchema, CommentDTO }
+export type { Comment, CreateCommentPayload, CommentDtoType }

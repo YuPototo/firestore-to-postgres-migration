@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/contexts/AuthContext'
-import postService from '@/services/post.service'
-import { Post } from '@/types/post'
+import { Post, PostDtoType } from '@/types/post'
 import PostCard from '@/components/post/PostCard'
 import Link from 'next/link'
-import { QueryDocumentSnapshot } from 'firebase/firestore'
 
 export default function MyPostsPage() {
     const { user } = useAuth()
@@ -15,11 +13,9 @@ export default function MyPostsPage() {
     const [error, setError] = useState('')
     const [currentPage, setCurrentPage] = useState(1)
     const [hasMore, setHasMore] = useState(true)
-    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | undefined>(
-        undefined
-    )
+    const [lastPostId, setLastPostId] = useState<string | undefined>(undefined)
     const [pageHistory, setPageHistory] = useState<{
-        [key: number]: QueryDocumentSnapshot | undefined
+        [key: number]: string | undefined
     }>({})
 
     const fetchPosts = async (
@@ -31,21 +27,27 @@ export default function MyPostsPage() {
         try {
             setLoading(true)
             const cursor =
-                direction === 'next' ? lastDoc : pageHistory[page - 1]
+                direction === 'next' ? lastPostId : pageHistory[page - 1]
 
-            const {
-                posts: newPosts,
-                hasMore: newHasMore,
-                lastDoc: newLastDoc,
-            } = await postService.getPosts(10, cursor, user.uid)
-            setPosts(newPosts as Post[])
-            setHasMore(newHasMore)
-            setLastDoc(newLastDoc)
+            const res = await fetch(
+                `/api/v0/posts?authorId=${user.uid}&lastPostId=${cursor}`
+            )
+            const data = await res.json()
+
+            const posts: Post[] = data.posts.map((post: PostDtoType) => ({
+                ...post,
+                createdAt: new Date(post.createdAt),
+                updatedAt: new Date(post.updatedAt),
+            }))
+
+            setPosts(posts)
+            setHasMore(data.hasMore)
+            setLastPostId(data.lastPostId)
 
             // Update page history
             setPageHistory((prev) => ({
                 ...prev,
-                [page]: newLastDoc,
+                [page]: data.lastPostId,
             }))
         } catch (err) {
             console.error(err)
@@ -113,7 +115,7 @@ export default function MyPostsPage() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-6 flex flex-col gap-4">
                         {posts.map((post) => (
                             <PostCard key={post.id} post={post} />
                         ))}

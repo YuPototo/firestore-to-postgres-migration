@@ -8,8 +8,7 @@ import {
     onAuthStateChanged,
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase/client'
-import { User } from '@/types/user'
-import userService from '@/services/user.service'
+import { FirebaseUser, User } from '@/types/user'
 
 interface AuthContextType {
     user: User | null
@@ -33,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return
             }
 
-            if (userService.isValidUser(user)) {
+            if (isValidUser(user)) {
                 setUser(user)
             } else {
                 console.error('Invalid user type', user)
@@ -78,4 +77,8 @@ export function useAuth() {
         throw new Error('useAuth must be used within an AuthProvider')
     }
     return context
+}
+
+function isValidUser(user: FirebaseUser | null): user is User {
+    return user !== null && 'email' in user
 }
