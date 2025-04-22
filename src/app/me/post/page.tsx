@@ -113,7 +113,7 @@ export default function MyPostsPage() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-6 flex flex-col gap-4">
                         {posts.map((post) => (
                             <PostCard key={post.id} post={post} />
                         ))}

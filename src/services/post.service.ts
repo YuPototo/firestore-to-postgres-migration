@@ -102,6 +102,8 @@ const getPosts = async (
         const post = PostSchema.safeParse({
             id: doc.id,
             ...doc.data(),
+            createdAt: doc.data().createdAt.toDate(),
+            updatedAt: doc.data().updatedAt.toDate(),
         })
 
         if (post.success) {
