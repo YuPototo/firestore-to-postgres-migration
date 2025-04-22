@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     }
 
     const data = {
-        message: 'Hello, world!',
+        message: `Hello, ${decoded.email}!`,
     }
 
     return NextResponse.json(data)
